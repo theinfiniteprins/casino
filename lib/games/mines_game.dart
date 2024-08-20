@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../custom_app_bar.dart'; // Import the custom AppBar widget
+import '../custom_app_bar.dart';
 
 class MinesGameScreen extends StatelessWidget {
   @override

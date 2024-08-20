@@ -1,7 +1,9 @@
+import 'package:casino/games/cricket_screen.dart';
 import 'package:flutter/material.dart';
-import 'custom_app_bar.dart'; // Import the custom AppBar widget
-import 'games/coin_game.dart'; // Import the CoinGameScreen
-import 'games/mines_game.dart'; // Import the MinesGameScreen
+import 'custom_app_bar.dart';
+import 'games/coin_game.dart';
+import 'games/mines_game.dart';
+import 'games/cricket_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -33,19 +35,19 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Add padding around the content
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Coin Games',
               style: TextStyle(
-                color: Colors.white, // Text color for Coin Games
-                fontSize: 18, // Adjust font size as needed
-                fontWeight: FontWeight.bold, // Make text bold
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10), // Space between text and button
+            SizedBox(height: 10),
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -54,28 +56,28 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: Container(
-                width: 100, // Set width for the button
-                height: 100, // Set height for the button
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.grey[800], // Background color for the button
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(10),
                   image: DecorationImage(
-                    image: AssetImage('assets/coin.webp'), // Path to coin game image
-                    fit: BoxFit.cover, // Ensure the image covers the button
+                    image: AssetImage('assets/coin.webp'),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 20), // Space between the two sections
+            SizedBox(height: 20),
             Text(
               'Mines Games',
               style: TextStyle(
-                color: Colors.white, // Text color for Mines Games
-                fontSize: 18, // Adjust font size as needed
-                fontWeight: FontWeight.bold, // Make text bold
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10), // Space between text and button
+            SizedBox(height: 10),
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -84,14 +86,44 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: Container(
-                width: 100, // Set width for the button
-                height: 100, // Set height for the button
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.grey[800], // Background color for the button
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(10),
                   image: DecorationImage(
-                    image: AssetImage('assets/mines.avif'), // Path to mines game image
-                    fit: BoxFit.cover, // Ensure the image covers the button
+                    image: AssetImage('assets/mines.avif'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Cricket',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 10),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CricketScreen()),
+                );
+              },
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(10),
+                  image: DecorationImage(
+                    image: AssetImage('assets/cricket.jpeg'),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),

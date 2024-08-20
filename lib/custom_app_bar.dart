@@ -9,20 +9,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.black, // Set the AppBar color to black
+      backgroundColor: Colors.black,
       leading: GestureDetector(
         onTap: () {
-          // Navigate to the home screen when the logo is tapped
+
           Navigator.pushNamed(context, '/');
         },
         child: Padding(
-          padding: const EdgeInsets.all(8.0), // Add padding for a better look
+          padding: const EdgeInsets.all(8.0),
           child: ClipOval(
             child: Image.asset(
               'assets/logo.png',
               width: 30,
               height: 30,
-              fit: BoxFit.cover, // Ensure the image fits the circle
+              fit: BoxFit.cover,
             ),
           ),
         ),
@@ -30,24 +30,24 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(
         title,
         style: TextStyle(
-          color: Colors.white, // Set text color to white for contrast
+          color: Colors.white,
         ),
       ),
-      centerTitle: true, // Center the title text
+      centerTitle: true,
       actions: [
         GestureDetector(
           onTap: () {
             showMenu(
               context: context,
               position: RelativeRect.fromLTRB(
-                double.infinity, // Left position off-screen
-                kToolbarHeight,  // Aligns with the app bar's height(this is app bar's default hight)
-                0,               // Right position is 0 (aligned to the right edge)
-                0,               // Bottom position
+                double.infinity,
+                kToolbarHeight,
+                0,
+                0,
               ),
               items: menuItems,
-            ).then((value) { // it returns "Future" (like promise in JS)
-              // Handle menu option selection
+            ).then((value) {
+
               if (value != null) {
                 switch (value) {
                   case 'Profile':
@@ -65,11 +65,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             });
           },
           child: CircleAvatar(
-            backgroundImage: AssetImage('assets/menu.png'), // Custom menu icon
-            radius: 30, // Adjust the radius as needed
+            backgroundImage: AssetImage('assets/menu.png'),
+            radius: 30,
           ),
         ),
-        SizedBox(width: 10), // Add spacing after the menu icon
+        SizedBox(width: 10),
       ],
     );
   }
