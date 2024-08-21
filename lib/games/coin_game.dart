@@ -110,9 +110,6 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Coin Flip Game'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
