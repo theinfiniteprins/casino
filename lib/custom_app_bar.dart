@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'games/coin_game.dart';
+import 'login.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -6,13 +10,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   CustomAppBar({required this.title, required this.menuItems});
 
+  Future<void> _signOut(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('id');
+    prefs.remove('password');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.black,
       leading: GestureDetector(
         onTap: () {
-
           Navigator.pushNamed(context, '/');
         },
         child: Padding(
@@ -47,7 +61,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               items: menuItems,
             ).then((value) {
-
               if (value != null) {
                 switch (value) {
                   case 'Profile':
@@ -59,6 +72,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   case 'Withdraw':
                     break;
                   case 'Sign Out':
+                    _signOut(context);
                     break;
                 }
               }

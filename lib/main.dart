@@ -3,6 +3,8 @@ import 'home_screen.dart';
 import 'games/coin_game.dart';
 import 'games/mines_game.dart';
 import 'games/cricket_screen.dart';
+import 'login.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => HomeScreen(),
+        '/': (context) => LoginPage(),
         '/coin_game': (context) => CoinGameScreen(),
         '/mines_game': (context) => MinesGameScreen(),
         '/cricket_game':(context) => CricketScreen(),
