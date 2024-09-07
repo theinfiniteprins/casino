@@ -51,7 +51,11 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
   late List<List<bool>> _revealed;
   late bool _gameOver;
 
+  int _touchedMineRow = -1;
+  int _touchedMineCol = -1;
+
   final TextEditingController _mineCountController = TextEditingController(text: '3');
+  int _lastValidMineCount = 3;
 
   @override
   void initState() {
@@ -63,6 +67,8 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
     _mines = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
     _revealed = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
     _gameOver = false;
+    _touchedMineRow = -1; // Initialize with invalid values
+    _touchedMineCol = -1;
 
     _placeMines();
   }
@@ -87,10 +93,26 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
     setState(() {
       _revealed[row][col] = true;
       if (_mines[row][col]) {
-        _gameOver = true; // Stop the game without showing a popup
+        _touchedMineRow = row; // Record the touched mine row
+        _touchedMineCol = col; // Record the touched mine column
+        _gameOver = true;
+        _revealAllMines(); // Reveal all mines with low opacity
       } else {
         if (_checkWin()) {
           _showWinDialog();
+        }
+      }
+    });
+  }
+
+  void _revealAllMines() {
+    // Reveal all mines with low opacity after a mine is found
+    setState(() {
+      for (int i = 0; i < gridSize; i++) {
+        for (int j = 0; j < gridSize; j++) {
+          if (_mines[i][j]) {
+            _revealed[i][j] = true;
+          }
         }
       }
     });
@@ -130,9 +152,38 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
 
   void _restartGame() {
     setState(() {
-      mineCount = int.tryParse(_mineCountController.text) ?? 3;
-      _initializeGame();
+      int newMineCount = int.tryParse(_mineCountController.text) ?? _lastValidMineCount;
+      if (newMineCount < 1) {
+        _showInvalidMineCountDialog();
+      } else {
+        _lastValidMineCount = newMineCount;
+        mineCount = newMineCount;
+        _initializeGame();
+      }
     });
+  }
+
+  void _showInvalidMineCountDialog() {
+    // Update the input field with the last valid mine count
+    _mineCountController.text = _lastValidMineCount.toString();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Invalid Mine Count'),
+          content: Text('The number of mines must be at least 1.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -169,18 +220,26 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
                 margin: EdgeInsets.all(4.0),
                 decoration: BoxDecoration(
                   color: _revealed[row][col]
-                      ? (_mines[row][col] ? Colors.red : Colors.green)
+                      ? (_mines[row][col]
+                      ? Colors.red.withOpacity(_gameOver ? 0.4 : 1.0) // Reveal all mines with reduced opacity on game over
+                      : Colors.green)
                       : Colors.grey[800],
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Center(
                   child: _revealed[row][col]
                       ? (_mines[row][col]
+                      ? (row == _touchedMineRow && col == _touchedMineCol
                       ? Image.asset(
-                    'assets/mine.webp',
+                    'assets/blast.jpg',
                     height: 50,
                     width: 50,
                   )
+                      : Image.asset(
+                    'assets/mine.webp',
+                    height: 50,
+                    width: 50,
+                  ))
                       : Container())
                       : Container(),
                 ),

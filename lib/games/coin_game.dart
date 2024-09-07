@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../custom_app_bar.dart';
 import 'dart:math';
+
 class CoinGameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,7 @@ class CoinGameScreen extends StatelessWidget {
     );
   }
 }
+
 class CoinFlipWidget extends StatefulWidget {
   @override
   _CoinFlipWidgetState createState() => _CoinFlipWidgetState();
@@ -49,6 +51,7 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
   late Animation<double> _animation;
   bool _isFlipping = false;
   String _coinImage = 'assets/head.png';
+  Color _resultColor = Colors.black; // Added to manage result color
 
   @override
   void initState() {
@@ -86,9 +89,11 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
       if (_selectedBet == outcome) {
         _balance += 10;
         _result += ' - You win!';
+        _resultColor = Colors.green; // Set to green on win
       } else {
         _balance -= 10;
         _result += ' - You lose!';
+        _resultColor = Colors.red; // Set to red on loss
       }
     });
   }
@@ -97,6 +102,7 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
     if (_selectedBet.isEmpty) {
       setState(() {
         _result = 'Please select Heads or Tails!';
+        _resultColor = Colors.black; // Reset to default if no selection
       });
       return;
     }
@@ -117,7 +123,10 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
           children: [
             Text(
               'Balance: \$$_balance',
-              style: TextStyle(fontSize: 24, color: Colors.black),
+              style: TextStyle(
+                  fontSize: 28,
+                  color: Colors.yellow,
+                  fontWeight: FontWeight.bold), // Balance styled
             ),
             SizedBox(height: 20),
             Row(
@@ -161,7 +170,7 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
                   alignment: Alignment.center,
                   transform: Matrix4.rotationY(_animation.value),
                   child: Image.asset(
-                    _coinImage, // Update to use dynamic image
+                    _coinImage,
                     height: 100,
                     width: 100,
                   ),
@@ -180,7 +189,10 @@ class _CoinFlipWidgetState extends State<CoinFlipWidget> with SingleTickerProvid
             SizedBox(height: 20),
             Text(
               _result,
-              style: TextStyle(fontSize: 24, color: Colors.black),
+              style: TextStyle(
+                fontSize: 24,
+                color: _resultColor, // Dynamic color based on result
+              ),
             ),
           ],
         ),
