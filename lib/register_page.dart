@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';  // Import home screen after registration success.
@@ -14,7 +15,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  Future<void> storeUserBalance(String userId) async {
+    DatabaseReference databaseRef = FirebaseDatabase.instance.ref('users/$userId');
 
+    await databaseRef.set({
+      'balance': 1000,
+    }).then((_) {
+      print("User's balance stored successfully!");
+    }).catchError((error) {
+      print("Failed to store balance: $error");
+    });
+  }
   Future<void> _register() async {
     setState(() {
       _isLoading = true;
@@ -25,6 +36,15 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        String userId = user.uid;
+        print('User ID: $userId');
+
+
+        storeUserBalance(userId);
+      }
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),  // Navigate to home on success.

@@ -50,11 +50,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAqgYBG09B-BYHbHAC0aIc-rIFh73YV-Nw',
-    appId: '1:363107472034:android:04b861f84254578557bdfb',
-    messagingSenderId: '363107472034',
-    projectId: 'casino-9ff89',
-    storageBucket: 'casino-9ff89.appspot.com',
+    apiKey: 'AIzaSyBMcosvWDcTcaeQu682HJZtNeTvJknsglo',
+    appId: '1:415594592271:android:3b70c4641f83f5f4890b7a',
+    messagingSenderId: '415594592271',
+    projectId: 'casino-408ac',
+    storageBucket: 'casino-408ac.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

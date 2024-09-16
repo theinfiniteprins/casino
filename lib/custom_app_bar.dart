@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'profile_page.dart';
 import 'login_page.dart';  // Import your login page.
 // import 'profile_page.dart';  // Import for profile navigation.
 // import 'history_page.dart';  // Import for history navigation.
@@ -32,7 +32,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: GestureDetector(
         onTap: () {
           // This assumes that '/' is the route for the home page.
-          Navigator.pushNamed(context, '/');
+          Navigator.pushNamed(context, '/home');
         },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -69,10 +69,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               if (value != null) {
                 switch (value) {
                   case 'Profile':
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => ProfilePage()),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileScreen()),
+                    );
                     break;
                   case 'History':
                     // Navigator.push(
