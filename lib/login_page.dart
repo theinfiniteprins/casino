@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';  // Import home screen after registration success.
+import 'register_page.dart';  // Import register page for navigation.
+import 'home_screen.dart';    // Import home screen for successful login.
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _register() async {
+  Future<void> _login() async {
     setState(() {
-      _isLoading = true;
+      _isLoading = true;  // Show loading indicator while processing.
     });
 
     try {
-      await _auth.createUserWithEmailAndPassword(
+      await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -31,7 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration Failed: ${e.toString()}')),
+        SnackBar(content: Text('Login Failed: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -43,7 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -61,10 +62,20 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? CircularProgressIndicator()  // Show loading indicator when logging in.
                 : ElevatedButton(
-              onPressed: _register,
-              child: const Text('Register'),
+              onPressed: _login,
+              child: const Text('Login'),
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisterPage()),  // Navigate to register.
+                );
+              },
+              child: const Text('Don’t have an account? Register'),
             ),
           ],
         ),

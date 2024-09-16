@@ -153,7 +153,7 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
   void _restartGame() {
     setState(() {
       int newMineCount = int.tryParse(_mineCountController.text) ?? _lastValidMineCount;
-      if (newMineCount < 1) {
+      if (newMineCount < 1 ) {
         _showInvalidMineCountDialog();
       } else {
         _lastValidMineCount = newMineCount;

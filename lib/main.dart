@@ -1,11 +1,14 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
 import 'home_screen.dart';
-import 'games/coin_game.dart';
-import 'games/mines_game.dart';
-import 'games/cricket_screen.dart';
-import 'login.dart';
+import 'login_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -18,15 +21,17 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         appBarTheme: AppBarTheme(
           color: Colors.black,
-          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20,fontFamily: 'BungeeTint'),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontFamily: 'BungeeTint',
+          ),
         ),
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginPage(),
-        '/coin_game': (context) => CoinGameScreen(),
-        '/mines_game': (context) => MinesGameScreen(),
-        '/cricket_game':(context) => CricketScreen(),
+        '/': (context) => const LoginPage(),
+        '/home': (context) => HomeScreen(),
       },
     );
   }

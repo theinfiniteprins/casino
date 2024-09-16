@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "363107472034",
+    "project_id": "casino-9ff89",
+    "storage_bucket": "casino-9ff89.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363107472034:android:04b861f84254578557bdfb",
+        "android_client_info": {
+          "package_name": "com.casino.casino"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqgYBG09B-BYHbHAC0aIc-rIFh73YV-Nw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363107472034:android:5082a5709be85d9557bdfb",
+        "android_client_info": {
+          "package_name": "com.example.firebase.firebase_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqgYBG09B-BYHbHAC0aIc-rIFh73YV-Nw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
