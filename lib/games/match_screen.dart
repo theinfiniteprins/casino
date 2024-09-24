@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../custom_app_bar.dart';
+
 class MatchDetailsScreen extends StatefulWidget {
   final dynamic match;
 
@@ -23,11 +25,19 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     final match = widget.match;
     final userId = FirebaseAuth.instance.currentUser?.uid;
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    final balance = userDoc.data()?['balance'] as double?;
+    final balance = userDoc.data()?['balance'] as num?;
+    
     if (_selectedTeam == null || betAmount.isEmpty) {
       // Show an error message if the required fields are not filled
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select a team and enter a bet amount.')),
+      );
+      return;
+    }
+
+    if(balance! < num.parse(betAmount)){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Insufficient Balance !')),
       );
       return;
     }
@@ -43,11 +53,14 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         'betAmount': double.parse(betAmount),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': userId,
+        'status':"pending"
       };
 
       // Add the bet to the Firestore collection
       await FirebaseFirestore.instance.collection('bets').add(betData);
-
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'balance':balance-num.parse(betAmount),
+      });
       // Optionally show a success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Bet placed successfully!')),
@@ -71,8 +84,35 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     final match = widget.match;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Match Details'),
+      appBar: CustomAppBar(
+        title: 'Match Details.',
+        menuItems: [
+          PopupMenuItem<String>(
+            value: 'Profile',
+            child: Text('Profile'),
+          ),
+          PopupMenuItem<String>(
+            value: 'History',
+            child: Text('History'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Deposit',
+            child: Text('Deposit'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Withdraw',
+            child: Text('Withdraw'),
+          ),
+          PopupMenuItem<String>(
+            value: 'bets',
+            child: Text('See Bets'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Sign Out',
+            child: Text('Sign Out'),
+          ),
+
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

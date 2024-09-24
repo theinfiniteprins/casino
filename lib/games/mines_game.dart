@@ -26,9 +26,14 @@ class MinesGameScreen extends StatelessWidget {
             child: Text('Withdraw'),
           ),
           PopupMenuItem<String>(
+            value: 'bets',
+            child: Text('See Bets'),
+          ),
+          PopupMenuItem<String>(
             value: 'Sign Out',
             child: Text('Sign Out'),
           ),
+
         ],
       ),
       body: Center(

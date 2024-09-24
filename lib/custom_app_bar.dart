@@ -1,7 +1,9 @@
+import 'package:casino/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'games/bets_screen.dart';
 import 'login_page.dart'; // Import your login page.
 // import 'profile_page.dart';  // Import for profile navigation.
 // import 'history_page.dart';  // Import for history navigation.
@@ -37,8 +39,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.black,
       leading: GestureDetector(
         onTap: () {
-          // This assumes that '/' is the route for the home page.
-          Navigator.pushNamed(context, '/');
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -100,6 +105,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     break;
                   case 'Sign Out':
                     _signOut(context); // Sign out and clear shared preferences.
+                    break;
+                  case 'bets':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserBetsWidget()),
+                );
                     break;
                 }
               }
