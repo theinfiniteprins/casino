@@ -1,7 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'profile_page.dart';
-import 'login_page.dart';  // Import your login page.
+
+import 'login_page.dart'; // Import your login page.
 // import 'profile_page.dart';  // Import for profile navigation.
 // import 'history_page.dart';  // Import for history navigation.
 // import 'deposit_page.dart';  // Import for deposit navigation.
@@ -13,17 +14,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const CustomAppBar({super.key, required this.title, required this.menuItems});
 
+  // Example Sign Out Function
   Future<void> _signOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.remove('id');
-    prefs.remove('password');
+    await prefs.remove('id');  // Remove stored ID
+    await prefs.remove('password');  // Remove stored password
 
-    // Navigate to login screen after sign out.
-    Navigator.pushReplacement(
+    await FirebaseAuth.instance.signOut();
+
+    // Clear the navigation stack and navigate to the login screen
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+          (Route<dynamic> route) => false, // Ensures no routes are left in the stack
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +38,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: GestureDetector(
         onTap: () {
           // This assumes that '/' is the route for the home page.
-          Navigator.pushNamed(context, '/home');
+          Navigator.pushNamed(context, '/');
         },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -69,10 +75,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               if (value != null) {
                 switch (value) {
                   case 'Profile':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProfileScreen()),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => ProfilePage()),
+                    // );
                     break;
                   case 'History':
                     // Navigator.push(
@@ -93,7 +99,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     // );
                     break;
                   case 'Sign Out':
-                    _signOut(context);  // Sign out and clear shared preferences.
+                    _signOut(context); // Sign out and clear shared preferences.
                     break;
                 }
               }

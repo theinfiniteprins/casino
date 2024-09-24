@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'register_page.dart';  // Import register page for navigation.
-import 'home_screen.dart';    // Import home screen for successful login.
+import 'package:shared_preferences/shared_preferences.dart';
+import 'home_screen.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,17 +19,23 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     setState(() {
-      _isLoading = true;  // Show loading indicator while processing.
+      _isLoading = true;
     });
 
     try {
-      await _auth.signInWithEmailAndPassword(
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      // Store user ID and password in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('id', userCredential.user!.uid);
+      await prefs.setString('password', _passwordController.text);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),  // Navigate to home on success.
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()  // Show loading indicator when logging in.
+                ? CircularProgressIndicator()
                 : ElevatedButton(
               onPressed: _login,
               child: const Text('Login'),
@@ -72,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegisterPage()),  // Navigate to register.
+                  MaterialPageRoute(builder: (context) => const RegisterPage()),
                 );
               },
               child: const Text('Don’t have an account? Register'),
