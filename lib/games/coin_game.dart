@@ -12,15 +12,16 @@ class CoinGameScreen extends StatefulWidget {
 class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProviderStateMixin {
   String _result = '';
   String _selectedBet = '';
-  int _balance = 0; // Start with zero, will be updated from Firestore
+  int _balance = 0;
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isFlipping = false;
   String _coinImage = 'assets/head.png';
   Color _resultColor = Colors.black;
+  TextEditingController _betController = TextEditingController(); // Controller for bet amount
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  String? userId; // Store user ID
+  String? userId;
 
   @override
   void initState() {
@@ -43,14 +44,14 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       }
     });
 
-    // Get user ID from SharedPreferences or FirebaseAuth
     userId = FirebaseAuth.instance.currentUser?.uid;
-    _fetchBalance(); // Fetch the initial balance from Firestore
+    _fetchBalance();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _betController.dispose(); // Dispose the controller
     super.dispose();
   }
 
@@ -59,7 +60,7 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       DocumentSnapshot userDoc = await firestore.collection('users').doc(userId).get();
       if (userDoc.exists) {
         setState(() {
-          _balance = userDoc['balance'] ?? 0; // Set balance from Firestore
+          _balance = userDoc['balance'] ?? 0;
         });
       }
     }
@@ -75,18 +76,22 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
 
   void _flipCoin() {
     String outcome = Random().nextBool() ? 'Heads' : 'Tails';
+    int betAmount = int.tryParse(_betController.text) ?? 0; // Get bet amount
+
     setState(() {
       _result = outcome;
       _coinImage = outcome == 'Heads' ? 'assets/head.png' : 'assets/tails.png';
+
       if (_selectedBet == outcome) {
-        _balance += 10;
-        _result += ' - You win!';
+        int winAmount = (betAmount * 1.9).round();
+        _balance += winAmount;
+        _result += ' - You win \$${winAmount}!';
         _resultColor = Colors.green;
       } else {
-        _balance -= 10;
         _result += ' - You lose!';
         _resultColor = Colors.red;
       }
+
       _updateBalance(_balance); // Update balance in Firestore
     });
   }
@@ -99,9 +104,22 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       });
       return;
     }
+
+    int betAmount = int.tryParse(_betController.text) ?? 0;
+    if (betAmount <= 0 || betAmount > _balance) {
+      setState(() {
+        _result = 'Invalid bet amount!';
+        _resultColor = Colors.red;
+      });
+      return;
+    }
+
     setState(() {
+      _balance -= betAmount; // Deduct the bet amount from balance
       _isFlipping = true;
     });
+
+    _updateBalance(_balance); // Update balance before the flip
     _controller.reset();
     _controller.forward();
   }
@@ -124,14 +142,23 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Balance: \$$_balance',
-              style: TextStyle(
-                  fontSize: 28,
-                  color: Colors.yellow,
-                  fontWeight: FontWeight.bold),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _betController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Enter Bet Amount',
+                border: OutlineInputBorder(),
+                suffix: Text(
+                  '1.9X',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
