@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../custom_app_bar.dart';
 import 'package:http/http.dart' as http;
 
+import 'match_screen.dart';
+
 class CricketScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -62,9 +64,12 @@ class _RunningMatchesWidgetState extends State<RunningMatchesWidget> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final List<dynamic> matches = data['data'] ?? [];
+        final List<dynamic> upcomingMatches = matches.where((match) {
+          return match['status'] == "Match not started";
+        }).toList();
 
         setState(() {
-          _matches = matches;
+          _matches = upcomingMatches;
           _isLoading = false;
         });
       } else {
@@ -98,71 +103,63 @@ class _RunningMatchesWidgetState extends State<RunningMatchesWidget> {
       itemCount: _matches.length,
       itemBuilder: (context, index) {
         final match = _matches[index];
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 8.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            side: BorderSide(color: Colors.blueAccent, width: 1),
-          ),
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${match['name']}',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white54,
+        return GestureDetector(
+          onTap: () {
+            // Navigate to match details page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MatchDetailsScreen(match: match),
+              ),
+            );
+          },
+          child: Card(
+            margin: EdgeInsets.symmetric(vertical: 8.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              side: BorderSide(color: Colors.blueAccent, width: 1),
+            ),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${match['name']}',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white54,
+                    ),
                   ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Teams: ${match['teams'].join(' vs ')}',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Venue: ${match['venue']}',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  'Status: ${match['status']}',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.bold,
-                    color: match['status'] == 'Live' ? Colors.green : Colors.red,
-                  ),
-                ),
-                if (match['score'] != null && match['score'].isNotEmpty) ...[
                   SizedBox(height: 8.0),
                   Text(
-                    'Score:',
+                    'Teams: ${match['teams'].join(' vs ')}',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'Venue: ${match['venue']}',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'Status: ${match['status']}',
                     style: TextStyle(
                       fontSize: 14.0,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
+                      color: match['status'] == 'Live' ? Colors.green : Colors.red,
                     ),
                   ),
-                  for (var score in match['score'])
-                    Text(
-                      '${score['r']} / ${score['w']} in ${score['o']} overs',
-                      style: TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.lightGreen,
-                      ),
-                    ),
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -170,3 +167,4 @@ class _RunningMatchesWidgetState extends State<RunningMatchesWidget> {
     );
   }
 }
+
