@@ -1,232 +1,201 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../custom_app_bar.dart';
 import 'dart:math';
 
-class CoinGameScreen extends StatelessWidget {
+class CoinGameScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Coin Game'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'Profile') {
-                // Navigate to Profile Screen
-              } else if (value == 'Deposit') {
-                // Trigger deposit action
-              } else if (value == 'Withdraw') {
-                // Trigger withdraw action
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem(value: 'Profile', child: Text('Profile')),
-                PopupMenuItem(value: 'Deposit', child: Text('Deposit')),
-                PopupMenuItem(value: 'Withdraw', child: Text('Withdraw')),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: CoinFlipWidget(),
-      ),
-    );
-  }
+  _CoinGameScreenState createState() => _CoinGameScreenState();
 }
 
-class CoinFlipWidget extends StatefulWidget {
-  @override
-  _CoinFlipWidgetState createState() => _CoinFlipWidgetState();
-}
-
-class _CoinFlipWidgetState extends State<CoinFlipWidget> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProviderStateMixin {
   String _result = '';
   String _selectedBet = '';
-  double _gameBalance = 0; // In-game balance
-  double _userBalance =0;
-  String _betAmount = '';
-
+  int _balance = 0; // Start with zero, will be updated from Firestore
+  late AnimationController _controller;
+  late Animation<double> _animation;
   bool _isFlipping = false;
   String _coinImage = 'assets/head.png';
   Color _resultColor = Colors.black;
 
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  String? userId; // Store user ID
+
   @override
   void initState() {
     super.initState();
-    _fetchUserBalance();
-  }
-  User? currentUser = FirebaseAuth.instance.currentUser;
-  // Fetch user balance from Firebase
-  Future<void> _fetchUserBalance() async {
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
 
+    _animation = Tween<double>(begin: 0, end: 2 * pi).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
 
-
-
-    DatabaseReference balanceRef = FirebaseDatabase.instance.ref('users/${currentUser!.uid}/balance');
-    balanceRef.get().then((DataSnapshot snapshot) {
-      if (snapshot.exists) {
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _flipCoin();
         setState(() {
-          int bl = snapshot.value as int;
-          _userBalance = bl.toDouble();// Set the user's balance
+          _isFlipping = false;
         });
       }
-    }).catchError((error) {
-      print("Failed to get balance: $error");
     });
+
+    // Get user ID from SharedPreferences or FirebaseAuth
+    userId = FirebaseAuth.instance.currentUser?.uid;
+    _fetchBalance(); // Fetch the initial balance from Firestore
   }
 
-  // Update user balance in Firebase
-  Future<void> _updateUserBalance(double newBalance, String userId) async {
-    DatabaseReference databaseRef = FirebaseDatabase.instance.ref('users/$userId');
-    await databaseRef.update({
-      'balance': newBalance,
-    }).then((_) {
-      print("User's balance updated successfully!");
-    }).catchError((error) {
-      print("Failed to update balance: $error");
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  // Deposit money from Firebase balance to in-game balance
-  void _deposit() {
-    double bet = double.tryParse(_betAmount) ?? 0.0;
-    if (bet <= _userBalance) {
-      setState(() {
-        _userBalance -= bet;
-        _gameBalance += bet;
-      });
-      _updateUserBalance(_userBalance,currentUser!.uid);
-    } else {
-      setState(() {
-        _result = 'Insufficient balance in Firebase!';
+  Future<void> _fetchBalance() async {
+    if (userId != null) {
+      DocumentSnapshot userDoc = await firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        setState(() {
+          _balance = userDoc['balance'] ?? 0; // Set balance from Firestore
+        });
+      }
+    }
+  }
+
+  Future<void> _updateBalance(int newBalance) async {
+    if (userId != null) {
+      await firestore.collection('users').doc(userId).update({
+        'balance': newBalance,
       });
     }
   }
 
-  // Withdraw winnings from in-game balance to Firebase balance
-  void _withdraw() {
+  void _flipCoin() {
+    String outcome = Random().nextBool() ? 'Heads' : 'Tails';
     setState(() {
-      _userBalance += _gameBalance;
-      _gameBalance = 0.0;
+      _result = outcome;
+      _coinImage = outcome == 'Heads' ? 'assets/head.png' : 'assets/tails.png';
+      if (_selectedBet == outcome) {
+        _balance += 10;
+        _result += ' - You win!';
+        _resultColor = Colors.green;
+      } else {
+        _balance -= 10;
+        _result += ' - You lose!';
+        _resultColor = Colors.red;
+      }
+      _updateBalance(_balance); // Update balance in Firestore
     });
-    _updateUserBalance(_userBalance,currentUser!.uid);
   }
 
-  // Coin flip logic
-  void _flipCoin() {
-    double bet = double.tryParse(_betAmount) ?? 0.0;
-    if (bet > _gameBalance) {
+  void _startFlip() {
+    if (_selectedBet.isEmpty) {
       setState(() {
-        _result = 'Insufficient game balance to bet!';
-        _resultColor = Colors.red;
+        _result = 'Please select Heads or Tails!';
+        _resultColor = Colors.black;
       });
       return;
     }
-
     setState(() {
       _isFlipping = true;
-      _result = '';
-      _coinImage = 'assets/flip.png'; // Placeholder for flipping coin
     });
-
-    Future.delayed(Duration(seconds: 2), () {
-      String outcome = Random().nextBool() ? 'Heads' : 'Tails';
-      setState(() {
-        _coinImage = outcome == 'Heads' ? 'assets/head.png' : 'assets/tails.png';
-        if (_selectedBet == outcome) {
-          _gameBalance += bet; // Win: Double the bet
-          _result = 'You win!';
-          _resultColor = Colors.green;
-        } else {
-          _gameBalance -= bet; // Lose: Deduct bet
-          _result = 'You lose!';
-          _resultColor = Colors.red;
-        }
-        _isFlipping = false;
-      });
-    });
+    _controller.reset();
+    _controller.forward();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Balance: \$$_gameBalance',
-          style: TextStyle(fontSize: 28, color: Colors.yellow, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 20),
-        Text(
-          'Firebase Balance: \$$_userBalance',
-          style: TextStyle(fontSize: 18, color: Colors.white),
-        ),
-        SizedBox(height: 20),
-        TextField(
-          onChanged: (value) {
-            _betAmount = value;
-          },
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Enter bet amount',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _selectedBet = 'Heads';
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _selectedBet == 'Heads' ? Colors.blue : Colors.grey,
-              ),
-              child: Text('Heads'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _selectedBet = 'Tails';
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _selectedBet == 'Tails' ? Colors.blue : Colors.grey,
-              ),
-              child: Text('Tails'),
-            ),
+    return Scaffold(
+        appBar: CustomAppBar(
+          title: 'Coin Game',
+          menuItems: [
+            PopupMenuItem<String>(value: 'Profile', child: Text('Profile')),
+            PopupMenuItem<String>(value: 'History', child: Text('History')),
+            PopupMenuItem<String>(value: 'Deposit', child: Text('Deposit')),
+            PopupMenuItem<String>(value: 'Withdraw', child: Text('Withdraw')),
+            PopupMenuItem<String>(value: 'Sign Out', child: Text('Sign Out')),
           ],
         ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _isFlipping ? null : _flipCoin,
-          child: Text('Flip Coin'),
-        ),
-        SizedBox(height: 20),
-        Text(
-          _result,
-          style: TextStyle(fontSize: 24, color: _resultColor),
-        ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _deposit,
-          child: Text('Deposit'),
-        ),
-        ElevatedButton(
-          onPressed: _withdraw,
-          child: Text('Withdraw'),
-        ),
-      ],
-    );
-  }
+        body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Balance: \$$_balance',
+                  style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.yellow,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _isFlipping ? null : () {
+                        setState(() {
+                          _selectedBet = 'Heads';
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _selectedBet == 'Heads' ? Colors.blue : Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('Heads'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _isFlipping ? null : () {
+                        setState(() {
+                          _selectedBet = 'Tails';
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _selectedBet == 'Tails' ? Colors.blue : Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('Tails'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationY(_animation.value),
+                      child: Image.asset(
+                        _coinImage,
+                        height: 100,
+                        width: 100,
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _isFlipping ? null : _startFlip,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Flip Coin'),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  _result,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: _resultColor,
+                  ),
+                ),
+              ],
+            ),
+            ),
+        );
+    }
 }
