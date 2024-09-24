@@ -1,6 +1,6 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'login_page.dart';
@@ -18,16 +18,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> storeUserBalance(String userId) async {
-    DatabaseReference databaseRef = FirebaseDatabase.instance.ref('users/$userId');
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    await databaseRef.set({
-      'balance': 1000,
-    }).then((_) {
-      print("User's balance stored successfully!");
-    }).catchError((error) {
-      print("Failed to store balance: $error");
-    });
+  Future<void> _saveBalance(String userId, int newBalance) async {
+    try {
+      await firestore.collection('users').doc(userId).set({
+        'balance': newBalance,
+      });
+      print("Balance of $newBalance saved for user: $userId");
+    } catch (e) {
+      print("Failed to save balance: $e");
+    }
   }
 
   Future<void> _register() async {
@@ -40,18 +41,20 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+
       User? user = userCredential.user;
 
       if (user != null) {
         String userId = user.uid;
         print('User ID: $userId');
 
+        // Save initial balance
+        await _saveBalance(userId, 500); // Set balance to 500
+
         // Store user ID and password in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('id', userId);
         await prefs.setString('password', _passwordController.text);
-
-        storeUserBalance(userId);
 
         Navigator.pushReplacement(
           context,
@@ -80,13 +83,15 @@ class _RegisterPageState extends State<RegisterPage> {
           children: [
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: 'Email', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: 'Password', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 20),
             _isLoading
