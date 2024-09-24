@@ -7,7 +7,7 @@ class MinesGameScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Mines Game',
+        title: 'Mines  ',
         menuItems: [
           PopupMenuItem<String>(
             value: 'Profile',
@@ -158,7 +158,7 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
   void _restartGame() {
     setState(() {
       int newMineCount = int.tryParse(_mineCountController.text) ?? _lastValidMineCount;
-      if (newMineCount < 1 ) {
+      if (newMineCount < 1 || newMineCount >24) {
         _showInvalidMineCountDialog();
       } else {
         _lastValidMineCount = newMineCount;
@@ -177,7 +177,7 @@ class _MinesGameWidgetState extends State<MinesGameWidget> {
       builder: (context) {
         return AlertDialog(
           title: Text('Invalid Mine Count'),
-          content: Text('The number of mines must be at least 1.'),
+          content: Text('The number of mines must be between 1 and 25'),
           actions: [
             TextButton(
               onPressed: () {

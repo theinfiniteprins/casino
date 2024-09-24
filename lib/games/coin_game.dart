@@ -109,93 +109,93 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: CustomAppBar(
-          title: 'Coin Game',
-          menuItems: [
-            PopupMenuItem<String>(value: 'Profile', child: Text('Profile')),
-            PopupMenuItem<String>(value: 'History', child: Text('History')),
-            PopupMenuItem<String>(value: 'Deposit', child: Text('Deposit')),
-            PopupMenuItem<String>(value: 'Withdraw', child: Text('Withdraw')),
-            PopupMenuItem<String>(value: 'Sign Out', child: Text('Sign Out')),
-          ],
-        ),
-        body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      appBar: CustomAppBar(
+        title: 'Flip It',
+        menuItems: [
+          PopupMenuItem<String>(value: 'Profile', child: Text('Profile')),
+          PopupMenuItem<String>(value: 'History', child: Text('History')),
+          PopupMenuItem<String>(value: 'Deposit', child: Text('Deposit')),
+          PopupMenuItem<String>(value: 'Withdraw', child: Text('Withdraw')),
+          PopupMenuItem<String>(value: 'Sign Out', child: Text('Sign Out')),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Balance: \$$_balance',
+              style: TextStyle(
+                  fontSize: 28,
+                  color: Colors.yellow,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text(
-                  'Balance: \$$_balance',
-                  style: TextStyle(
-                      fontSize: 28,
-                      color: Colors.yellow,
-                      fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _isFlipping ? null : () {
-                        setState(() {
-                          _selectedBet = 'Heads';
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _selectedBet == 'Heads' ? Colors.blue : Colors.grey,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text('Heads'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _isFlipping ? null : () {
-                        setState(() {
-                          _selectedBet = 'Tails';
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _selectedBet == 'Tails' ? Colors.blue : Colors.grey,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text('Tails'),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) {
-                    return Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.rotationY(_animation.value),
-                      child: Image.asset(
-                        _coinImage,
-                        height: 100,
-                        width: 100,
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _isFlipping ? null : _startFlip,
+                  onPressed: _isFlipping ? null : () {
+                    setState(() {
+                      _selectedBet = 'Heads';
+                    });
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: _selectedBet == 'Heads' ? Colors.blue : Colors.grey,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text('Flip Coin'),
+                  child: Text('Heads'),
                 ),
-                SizedBox(height: 20),
-                Text(
-                  _result,
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: _resultColor,
+                ElevatedButton(
+                  onPressed: _isFlipping ? null : () {
+                    setState(() {
+                      _selectedBet = 'Tails';
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedBet == 'Tails' ? Colors.blue : Colors.grey,
+                    foregroundColor: Colors.white,
                   ),
+                  child: Text('Tails'),
                 ),
               ],
             ),
+            SizedBox(height: 20),
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.rotationY(_animation.value),
+                  child: Image.asset(
+                    _coinImage,
+                    height: 100,
+                    width: 100,
+                  ),
+                );
+              },
             ),
-        );
-    }
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isFlipping ? null : _startFlip,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Flip Coin'),
+            ),
+            SizedBox(height: 20),
+            Text(
+              _result,
+              style: TextStyle(
+                fontSize: 24,
+                color: _resultColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

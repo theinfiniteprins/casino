@@ -114,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.6), // Adjust opacity here
+            color: Colors.black.withOpacity(0.65), // Adjust opacity here
           ),
           // Content
           SingleChildScrollView(
