@@ -63,7 +63,7 @@ class _RunningMatchesWidgetState extends State<RunningMatchesWidget> {
   }
 
   Future<void> _fetchMatches() async {
-    final url = Uri.parse('https://api.cricapi.com/v1/currentMatches?apikey=f764fc6c-ab15-4698-9c6e-2f315b685b93&offset=0');
+    final url = Uri.parse('https://api.cricapi.com/v1/currentMatches?apikey=14dfe74a-588d-4a34-9366-f2065d81ef0f&offset=0');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

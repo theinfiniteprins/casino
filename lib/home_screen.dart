@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,6 +7,7 @@ import 'custom_app_bar.dart';
 import 'games/coin_game.dart';
 import 'games/mines_game.dart';
 import 'games/cricket_screen.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,6 +15,67 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  Future<void> handleMatchUpdates() async {
+    try {
+      // Fetch all bet documents from Firestore
+      final betDocs = await FirebaseFirestore.instance.collection('bets').get();
+      final bets = betDocs.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+      for (final bet in bets) {
+        if(bet['status'] != "pending"){
+          continue;
+        }
+        final String matchId = bet['matchId'];
+        final String team = bet['selectedTeam'];
+        final String userId = bet['userId'];
+        final double betAmount = bet['betAmount'];
+
+        // API call to get match info
+        final String apiUrl = 'https://api.cricapi.com/v1/match_info?apikey=14dfe74a-588d-4a34-9366-f2065d81ef0f&id=$matchId';
+        final response = await http.get(Uri.parse(apiUrl));
+        if (response.statusCode == 200) {
+          final resdata = await jsonDecode(response.body);
+          final data  = resdata['data'];
+          // Check if the match has ended
+          if (data['matchEnded'] == true) {
+            final matchStatus = data['status'];
+            print(matchStatus);
+            // Check if the selected team won
+            if (matchStatus.contains(team)) {
+              print("won");
+              // Update user balance and bet status if won
+              await FirebaseFirestore.instance.collection('users').doc(userId).update({
+                'balance': FieldValue.increment(betAmount * 2),
+              });
+              await FirebaseFirestore.instance.collection('bets').doc(bet['id']).update({
+                'status': 'won',
+              });
+            } else {
+              print("loose");
+              // Update bet status if lost
+              await FirebaseFirestore.instance.collection('bets').doc(bet['id']).update({
+                'status': 'lost',
+              });
+            }
+          }
+          else{
+            print("match not Ended yet");
+          }
+        } else {
+          print('Failed to fetch match data: ${response.statusCode}');
+        }
+      }
+    } catch (error) {
+      print('Error fetching match updates: $error');
+    }
+  }
+
+
+  void update() async {
+    await handleMatchUpdates();
+  }
+
+
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   User? user = FirebaseAuth.instance.currentUser;
   int balance = 0;
@@ -20,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    update();
     super.initState();
     _getUserData();  // Fetch user data (balance and email) on screen load
   }
