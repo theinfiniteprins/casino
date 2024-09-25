@@ -87,7 +87,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             }
 
             if (snapshot.hasData && snapshot.data!.exists) {
-              int balance = snapshot.data!['balance'] ?? 0;
+              double balance = snapshot.data!['balance'] ?? 0;
 
               return Padding(
                 padding: const EdgeInsets.only(right: 10.0),
