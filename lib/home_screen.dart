@@ -7,7 +7,9 @@ import 'custom_app_bar.dart';
 import 'games/coin_game.dart';
 import 'games/mines_game.dart';
 import 'games/cricket_screen.dart';
+
 import 'package:http/http.dart' as http;
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -31,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final double betAmount = bet['betAmount'];
 
         // API call to get match info
-        final String apiUrl = 'https://api.cricapi.com/v1/match_info?apikey=bf1cd1eb-8d55-44e8-b92b-c6a04eac2ae9&id=$matchId';
+        final String apiUrl = 'https://api.cricapi.com/v1/match_info?apikey=14dfe74a-588d-4a34-9366-f2065d81ef0f&id=$matchId';
         final response = await http.get(Uri.parse(apiUrl));
         if (response.statusCode == 200) {
           final resdata = await jsonDecode(response.body);
@@ -73,13 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   User? user = FirebaseAuth.instance.currentUser;
-  double balance = 0;
+  int balance = 0;
   bool isLoading = true;  // To show loading state while fetching data
   String email = '';
 
   void update() async {
     await handleMatchUpdates();
   }
+
   @override
   void initState() {
     super.initState();
@@ -177,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.6), // Adjust opacity here
+            color: Colors.black.withOpacity(0.65), // Adjust opacity here
           ),
           // Content
           SingleChildScrollView(
