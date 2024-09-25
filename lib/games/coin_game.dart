@@ -12,7 +12,7 @@ class CoinGameScreen extends StatefulWidget {
 class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProviderStateMixin {
   String _result = '';
   String _selectedBet = '';
-  int _balance = 0;
+  double _balance = 0;
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isFlipping = false;
@@ -66,7 +66,7 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
     }
   }
 
-  Future<void> _updateBalance(int newBalance) async {
+  Future<void> _updateBalance(double newBalance) async {
     if (userId != null) {
       await firestore.collection('users').doc(userId).update({
         'balance': newBalance,
@@ -105,7 +105,7 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       return;
     }
 
-    int betAmount = int.tryParse(_betController.text) ?? 0;
+    double betAmount = double.parse(_betController.text) ?? 0;
     if (betAmount <= 0 || betAmount > _balance) {
       setState(() {
         _result = 'Invalid bet amount!';
