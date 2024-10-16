@@ -50,7 +50,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         'teams': match['teams'],
         'venue': match['venue'],
         'selectedTeam': _selectedTeam,
-        'betAmount': double.parse(betAmount),
+        'betAmount': int.parse(betAmount),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': userId,
         'status':"pending"

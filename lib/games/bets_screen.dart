@@ -55,7 +55,7 @@ class _UserBetsWidgetState extends State<UserBetsWidget> {
     return Colors.orange; // Pending
   }
 
-  String _getBetResult(String status, double betAmount) {
+  String _getBetResult(String status, int betAmount) {
     if (status == 'won') return '+\$${betAmount.toString()}';
     if (status == 'lost') return '-\$${betAmount.toString()}';
     return 'Pending';
@@ -109,7 +109,7 @@ class _UserBetsWidgetState extends State<UserBetsWidget> {
         itemBuilder: (context, index) {
           final bet = _bets[index].data() as Map<String, dynamic>;
           final String status = bet['status']; // New field for status
-          final double betAmount = bet['betAmount'];
+          final int betAmount = bet['betAmount'];
 
           return Card(
             margin: EdgeInsets.symmetric(vertical: 8.0),

@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final String matchId = bet['matchId'];
         final String team = bet['selectedTeam'];
         final String userId = bet['userId'];
-        final double betAmount = bet['betAmount'];
+        final int betAmount = bet['betAmount'];
 
         // API call to get match info
         final String apiUrl = 'https://api.cricapi.com/v1/match_info?apikey=14dfe74a-588d-4a34-9366-f2065d81ef0f&id=$matchId';
