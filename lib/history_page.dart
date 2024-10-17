@@ -11,9 +11,34 @@ class HistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Bet History',
-        menuItems: [],
+      appBar: const CustomAppBar(
+        title: 'Mines',
+        menuItems: [
+          PopupMenuItem<String>(
+            value: 'Profile',
+            child: Text('Profile'),
+          ),
+          PopupMenuItem<String>(
+            value: 'History',
+            child: Text('History'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Deposit',
+            child: Text('Deposit'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Withdraw',
+            child: Text('Withdraw'),
+          ),
+          PopupMenuItem<String>(
+            value: 'bets',
+            child: Text('Cricket Bets'),
+          ),
+          PopupMenuItem<String>(
+            value: 'Sign Out',
+            child: Text('Sign Out'),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,7 +69,8 @@ class HistoryPage extends StatelessWidget {
                 DateTime dateTime = timestamp.toDate();
 
                 // Format the date using intl package
-                String formattedDate = DateFormat('MMM dd, yyyy - hh:mm a').format(dateTime);
+                String formattedDate =
+                DateFormat('MMM dd, yyyy - hh:mm a').format(dateTime);
 
                 return Card(
                   shape: RoundedRectangleBorder(
@@ -62,7 +88,7 @@ class HistoryPage extends StatelessWidget {
                           children: [
                             Text(
                               'Game: ${history['Game']}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
@@ -76,32 +102,56 @@ class HistoryPage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Bet: ${history['bet']}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                        const SizedBox(height: 8),
+                        if (history['Game'] == 'Mines') ...[
+                          Text(
+                            'Amount: \$${history['amount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
-                        ),
+                          Text(
+                            'Win Amount: \$${history['winAmount'].toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            'Mine Count: ${history['mineCount']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            'Opened Safe Tiles: ${history['openedSafeTiles']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ] else if (history['Game'] == 'Flip It') ...[
+                          Text(
+                            'Bet: ${history['bet']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          Text(
+                            'Outcome: ${history['outcome']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            'Amount: \$${history['amount']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            'Result: ${history['result']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
                         Text(
-                          'Outcome: ${history['outcome']}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Amount: \$${history['amount']}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Result: ${history['result']}',
+                          'Result: ${history['won'] ? 'Won' : 'Lost'}',
                           style: TextStyle(
                             fontSize: 16,
                             color: history['won'] ? Colors.green : Colors.red,
                           ),
                         ),
-                        SizedBox(height: 4),
                       ],
                     ),
                   ),

@@ -95,7 +95,7 @@ class _UserBetsWidgetState extends State<UserBetsWidget> {
           ),
           PopupMenuItem<String>(
             value: 'bets',
-            child: Text('See Bets'),
+            child: Text('Cricket Bets'),
           ),
           PopupMenuItem<String>(
             value: 'Sign Out',

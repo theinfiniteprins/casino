@@ -54,6 +54,25 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
     }
   }
 
+  Future<void> _saveGameHistory(bool won) async {
+    if (userId != null) {
+      await firestore.collection('users').doc(userId!).collection('history').add({
+        'Game': "Mines",
+        'amount': _betAmount,
+        'winAmount': _winAmount,
+        'mineCount': mineCount,
+        'openedSafeTiles': _openedSafeTiles,
+        'won': won,
+        'date': FieldValue.serverTimestamp(),
+      });
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save bet history. Please try again.')),
+      );
+    }
+  }
+
   void _initializeGame() {
     _mines = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
     _revealed = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
@@ -95,12 +114,14 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
         _revealAllMines();
         _winAmount = -_betAmount.toDouble(); // Show loss amount
         _updateBalance(_balance); // No change in balance since bet is lost
+        _saveGameHistory(false);
       } else {
         _openedSafeTiles++;
         _winAmount = _calculateWinAmount(); // Update win amount after each safe tile
         if (_checkWin()) {
           _balance += _winAmount.round();
           _updateBalance(_balance);
+          _saveGameHistory(true);
           _gameOver = true;
         }
       }
@@ -189,12 +210,9 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
     _balance += _winAmount.round();
     _updateBalance(_balance);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('You cashed out ₹${_winAmount.toStringAsFixed(2)}')),
-    );
 
     _revealAllMines();
-
+    _saveGameHistory(true);
     setState(() {
       _cashOutClicked = true;
       _gameOver = true;
@@ -250,7 +268,7 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
           ),
           PopupMenuItem<String>(
             value: 'bets',
-            child: Text('See Bets'),
+            child: Text('Cricket Bets'),
           ),
           PopupMenuItem<String>(
             value: 'Sign Out',
@@ -276,7 +294,7 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
                     ? Colors.green
                     : _mineHit
                     ? Colors.red
-                    : Colors.white,
+                    : Colors.grey,
               ),
             ),
             SizedBox(height: 20),

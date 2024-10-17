@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuItem<String>(
             value: 'bets',
-            child: Text('See Bets'),
+            child: Text('Cricket Bets'),
           ),
           PopupMenuItem<String>(
             value: 'Sign Out',

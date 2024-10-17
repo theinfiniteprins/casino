@@ -162,6 +162,7 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
           PopupMenuItem<String>(value: 'History', child: Text('History')),
           PopupMenuItem<String>(value: 'Deposit', child: Text('Deposit')),
           PopupMenuItem<String>(value: 'Withdraw', child: Text('Withdraw')),
+          PopupMenuItem<String>(value: 'bets', child: Text('Cricket Bets')),
           PopupMenuItem<String>(value: 'Sign Out', child: Text('Sign Out')),
         ],
       ),

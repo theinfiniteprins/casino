@@ -105,7 +105,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
           ),
           PopupMenuItem<String>(
             value: 'bets',
-            child: Text('See Bets'),
+            child: Text('Cricket Bets'),
           ),
           PopupMenuItem<String>(
             value: 'Sign Out',
