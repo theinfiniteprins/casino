@@ -68,11 +68,51 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
 
   Future<void> _updateBalance(int newBalance) async {
     if (userId != null) {
-      await firestore.collection('users').doc(userId).update({
+      await firestore.collection('users').doc(userId!).update({
         'balance': newBalance,
       });
     }
   }
+
+  // Save the bet result to Firebase
+  // Future<void> _saveBetToHistory(String result, int betAmount, bool win, String outcome) async {
+  //   if (userId != null) {
+  //     await firestore.collection('users').doc(userId).collection('history').add({
+  //       'bet': _selectedBet,
+  //       'amount': betAmount,
+  //       'outcome': outcome,
+  //       'result': result,
+  //       'won': win,
+  //       'date': DateTime.now().toIso8601String(),
+  //     });
+  //   }
+  // }
+
+  Future<void> _saveBetToHistory(String result, int betAmount, bool win, String outcome) async {
+    if (userId != null) {
+      try {
+        // This will automatically create the 'history' subcollection if it doesn't exist
+        await firestore.collection('users').doc(userId).collection('history').add({
+          'Game': "Flip It",
+          'bet': _selectedBet,        // User's selected bet (Heads or Tails)
+          'amount': betAmount,        // The amount they bet
+          'outcome': outcome,         // Actual outcome (Heads or Tails)
+          'result': result,           // The result (e.g., win/lose message)
+          'won': win,                 // Boolean indicating if the user won
+          'date': FieldValue.serverTimestamp(), // Timestamp from Firestore server
+        });
+      } catch (e) {
+        print('Error saving bet history: $e');
+        // Optionally, show a user-friendly error message in the UI
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save bet history. Please try again.')),
+        );
+      }
+    }
+  }
+
+
+
 
   void _flipCoin() {
     String outcome = Random().nextBool() ? 'Heads' : 'Tails';
@@ -82,7 +122,8 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       _result = outcome;
       _coinImage = outcome == 'Heads' ? 'assets/head.png' : 'assets/tails.png';
 
-      if (_selectedBet == outcome) {
+      bool win = _selectedBet == outcome;
+      if (win) {
         int winAmount = (betAmount * 1.9).round();
         _balance += winAmount;
         _result += ' - You win \$${winAmount}!';
@@ -93,6 +134,7 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
       }
 
       _updateBalance(_balance); // Update balance in Firestore
+      _saveBetToHistory(_result, betAmount, win, outcome); // Save bet result to history
     });
   }
 

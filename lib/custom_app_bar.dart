@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'games/bets_screen.dart';
+import 'history_page.dart';
 import 'login_page.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -143,7 +144,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
                     break;
                   case 'History':
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
                     break;
                   case 'Deposit':
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => DepositPage()));
