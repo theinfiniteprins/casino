@@ -1,13 +1,236 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../custom_app_bar.dart';
 import 'dart:math';
 
-class MinesGameScreen extends StatelessWidget {
+class MinesGameScreen extends StatefulWidget {
+  @override
+  _MinesGameScreenState createState() => _MinesGameScreenState();
+}
+
+class _MinesGameScreenState extends State<MinesGameScreen> {
+  static const int gridSize = 5;
+  int mineCount = 3;
+  int _balance = 0;
+  int _betAmount = 0;
+  int _openedSafeTiles = 0;
+  bool _gameOver = false;
+  bool _gameStarted = false;
+  bool _cashOutClicked = false; // New flag to track cash out click
+  bool _mineHit = false; // New flag to track if mine was hit
+
+  double _winAmount = 0; // New variable to track win amount
+  late List<List<bool>> _mines;
+  late List<List<bool>> _revealed;
+
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  String? userId;
+  final TextEditingController _mineCountController = TextEditingController();
+  final TextEditingController _betController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    userId = FirebaseAuth.instance.currentUser?.uid;
+    _fetchBalance();
+    _initializeGame();
+  }
+
+  Future<void> _fetchBalance() async {
+    if (userId != null) {
+      DocumentSnapshot userDoc = await firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        setState(() {
+          _balance = userDoc['balance'] ?? 0;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateBalance(int newBalance) async {
+    if (userId != null) {
+      await firestore.collection('users').doc(userId!).update({'balance': newBalance});
+    }
+  }
+
+  void _initializeGame() {
+    _mines = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
+    _revealed = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
+    _gameOver = false;
+    _openedSafeTiles = 0;
+    _cashOutClicked = false;
+    _mineHit = false;
+    _winAmount = 0;
+  }
+
+  void _placeMines() {
+    int minesPlaced = 0;
+    while (minesPlaced < mineCount) {
+      int row = Random().nextInt(gridSize);
+      int col = Random().nextInt(gridSize);
+      if (!_mines[row][col]) {
+        _mines[row][col] = true;
+        minesPlaced++;
+      }
+    }
+  }
+
+  double _calculateWinAmount() {
+    int totalMines = 25;
+    double winAmount = _betAmount.toDouble();
+    winAmount += ((winAmount * winAmount * mineCount * (_openedSafeTiles + 1)) /
+        (totalMines * (totalMines - mineCount)));
+    return winAmount;
+  }
+
+  void _revealSquare(int row, int col) {
+    if (_gameOver || _revealed[row][col] || !_gameStarted) return;
+
+    setState(() {
+      _revealed[row][col] = true;
+      if (_mines[row][col]) {
+        _gameOver = true;
+        _mineHit = true;
+        _revealAllMines();
+        _winAmount = -_betAmount.toDouble(); // Show loss amount
+        _updateBalance(_balance); // No change in balance since bet is lost
+      } else {
+        _openedSafeTiles++;
+        _winAmount = _calculateWinAmount(); // Update win amount after each safe tile
+        if (_checkWin()) {
+          _balance += _winAmount.round();
+          _updateBalance(_balance);
+          _gameOver = true;
+        }
+      }
+    });
+  }
+
+  void _revealAllMines() {
+    setState(() {
+      for (int i = 0; i < gridSize; i++) {
+        for (int j = 0; j < gridSize; j++) {
+          if (_mines[i][j]) {
+            _revealed[i][j] = true;
+          }
+        }
+      }
+    });
+  }
+
+  void _restartGame() {
+    setState(() {
+      int newMineCount = int.tryParse(_mineCountController.text) ?? mineCount;
+      if (newMineCount < 1 || newMineCount > 24) {
+        _showInvalidMineCountDialog();
+        return;
+      }
+      if (_betAmount > _balance) {
+        _showInvalidBetDialog();
+        return;
+      }
+      _betAmount = int.tryParse(_betController.text) ?? 0;
+      _balance -= _betAmount;
+      _updateBalance(_balance);
+      mineCount = newMineCount;
+      _initializeGame();
+      _placeMines();
+      _gameStarted = true;
+    });
+  }
+
+  void _showInvalidMineCountDialog() {
+    _mineCountController.text = mineCount.toString();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Invalid Mine Count'),
+          content: Text('The number of mines must be between 1 and 24'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showInvalidBetDialog() {
+    _betController.text = '';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Invalid Bet Amount'),
+          content: Text('Bet amount exceeds your current balance.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _cashOut() {
+    _winAmount = _calculateWinAmount();
+    _balance += _winAmount.round();
+    _updateBalance(_balance);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('You cashed out ₹${_winAmount.toStringAsFixed(2)}')),
+    );
+
+    _revealAllMines();
+
+    setState(() {
+      _cashOutClicked = true;
+      _gameOver = true;
+      _gameStarted = false;
+    });
+  }
+
+  bool _checkWin() {
+    return _openedSafeTiles == (gridSize * gridSize - mineCount);
+  }
+
+  bool _isGameStarted() {
+    return _openedSafeTiles > 0 && _gameStarted;
+  }
+
+  void _startGame() {
+    setState(() {
+      mineCount = int.tryParse(_mineCountController.text) ?? mineCount;
+      _betAmount = int.tryParse(_betController.text) ?? 0;
+      if (mineCount < 1 || mineCount > 24 || _betAmount <= 0 || _betAmount > _balance) {
+        _showInvalidMineCountDialog();
+        return;
+      }
+      _balance -= _betAmount;
+      _updateBalance(_balance);
+      _initializeGame();
+      _placeMines();
+      _gameStarted = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Mines  ',
+        title: 'Mines',
         menuItems: [
           PopupMenuItem<String>(
             value: 'Profile',
@@ -33,231 +256,96 @@ class MinesGameScreen extends StatelessWidget {
             value: 'Sign Out',
             child: Text('Sign Out'),
           ),
-
         ],
       ),
-      body: Center(
-        child: MinesGameWidget(),
-      ),
-    );
-  }
-}
-
-class MinesGameWidget extends StatefulWidget {
-  @override
-  _MinesGameWidgetState createState() => _MinesGameWidgetState();
-}
-
-class _MinesGameWidgetState extends State<MinesGameWidget> {
-  static const int gridSize = 5;
-  int mineCount = 3;
-
-  late List<List<bool>> _mines;
-  late List<List<bool>> _revealed;
-  late bool _gameOver;
-
-  int _touchedMineRow = -1;
-  int _touchedMineCol = -1;
-
-  final TextEditingController _mineCountController = TextEditingController(text: '3');
-  int _lastValidMineCount = 3;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeGame();
-  }
-
-  void _initializeGame() {
-    _mines = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
-    _revealed = List.generate(gridSize, (_) => List.generate(gridSize, (_) => false));
-    _gameOver = false;
-    _touchedMineRow = -1; // Initialize with invalid values
-    _touchedMineCol = -1;
-
-    _placeMines();
-  }
-
-  void _placeMines() {
-    int minesPlaced = 0;
-    while (minesPlaced < mineCount) {
-      int row = Random().nextInt(gridSize);
-      int col = Random().nextInt(gridSize);
-      if (!_mines[row][col]) {
-        _mines[row][col] = true;
-        minesPlaced++;
-      }
-    }
-  }
-
-  void _revealSquare(int row, int col) {
-    if (_gameOver || _revealed[row][col]) {
-      return;
-    }
-
-    setState(() {
-      _revealed[row][col] = true;
-      if (_mines[row][col]) {
-        _touchedMineRow = row; // Record the touched mine row
-        _touchedMineCol = col; // Record the touched mine column
-        _gameOver = true;
-        _revealAllMines(); // Reveal all mines with low opacity
-      } else {
-        if (_checkWin()) {
-          _showWinDialog();
-        }
-      }
-    });
-  }
-
-  void _revealAllMines() {
-    // Reveal all mines with low opacity after a mine is found
-    setState(() {
-      for (int i = 0; i < gridSize; i++) {
-        for (int j = 0; j < gridSize; j++) {
-          if (_mines[i][j]) {
-            _revealed[i][j] = true;
-          }
-        }
-      }
-    });
-  }
-
-  bool _checkWin() {
-    for (int i = 0; i < gridSize; i++) {
-      for (int j = 0; j < gridSize; j++) {
-        if (!_mines[i][j] && !_revealed[i][j]) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  void _showWinDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('You Win!'),
-          content: Text('You have successfully avoided all mines!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _restartGame();
-              },
-              child: Text('Play Again'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _restartGame() {
-    setState(() {
-      int newMineCount = int.tryParse(_mineCountController.text) ?? _lastValidMineCount;
-      if (newMineCount < 1 || newMineCount >24) {
-        _showInvalidMineCountDialog();
-      } else {
-        _lastValidMineCount = newMineCount;
-        mineCount = newMineCount;
-        _initializeGame();
-      }
-    });
-  }
-
-  void _showInvalidMineCountDialog() {
-    // Update the input field with the last valid mine count
-    _mineCountController.text = _lastValidMineCount.toString();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Invalid Mine Count'),
-          content: Text('The number of mines must be between 1 and 25'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            controller: _mineCountController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Enter number of mines',
-              border: OutlineInputBorder(),
-            ),
-            onSubmitted: (value) {
-              _restartGame();
-            },
-          ),
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: gridSize,
-          ),
-          itemCount: gridSize * gridSize,
-          itemBuilder: (context, index) {
-            int row = index ~/ gridSize;
-            int col = index % gridSize;
-            return GestureDetector(
-              onTap: () => _revealSquare(row, col),
-              child: Container(
-                margin: EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
-                  color: _revealed[row][col]
-                      ? (_mines[row][col]
-                      ? Colors.red.withOpacity(_gameOver ? 0.4 : 1.0) // Reveal all mines with reduced opacity on game over
-                      : Colors.green)
-                      : Colors.grey[800],
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Center(
-                  child: _revealed[row][col]
-                      ? (_mines[row][col]
-                      ? (row == _touchedMineRow && col == _touchedMineCol
-                      ? Image.asset(
-                    'assets/blast.jpg',
-                    height: 50,
-                    width: 50,
-                  )
-                      : Image.asset(
-                    'assets/mine.webp',
-                    height: 50,
-                    width: 50,
-                  ))
-                      : Container())
-                      : Container(),
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Win Amount Display
+            Text(
+              _cashOutClicked
+                  ? 'Won: ₹${_winAmount.toStringAsFixed(2)}'
+                  : _mineHit
+                  ? 'Lost: ₹${(-_winAmount).toStringAsFixed(2)}'
+                  : 'Potential Win: ₹${_winAmount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: _cashOutClicked
+                    ? Colors.green
+                    : _mineHit
+                    ? Colors.red
+                    : Colors.white,
               ),
-            );
-          },
+            ),
+            SizedBox(height: 20),
+            // Mine Count Input
+            TextField(
+              controller: _mineCountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Enter number of mines',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Bet Amount Input
+            TextField(
+              controller: _betController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Enter Bet Amount',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Start Game Button
+            ElevatedButton(
+              onPressed: _startGame,
+              child: Text('Start Game'),
+            ),
+            SizedBox(height: 20),
+            // Game Grid
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: gridSize,
+                ),
+                itemCount: gridSize * gridSize,
+                itemBuilder: (context, index) {
+                  int row = index ~/ gridSize;
+                  int col = index % gridSize;
+                  return GestureDetector(
+                    onTap: () {
+                      _revealSquare(row, col);
+                    },
+                    child: Container(
+                      margin: EdgeInsets.all(4),
+                      color: _revealed[row][col]
+                          ? (_mines[row][col] ? Colors.red : Colors.green)
+                          : Colors.grey,
+                      child: Center(
+                        child: Text(
+                          _revealed[row][col]
+                              ? (_mines[row][col] ? '💣' : '✔️')
+                              : '',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Cash Out Button
+            ElevatedButton(
+              onPressed: _isGameStarted() && !_gameOver ? _cashOut : null,
+              child: Text('Cash Out'),
+            ),
+          ],
         ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _restartGame,
-          child: Text('Restart Game'),
-        ),
-      ],
+      ),
     );
   }
 }

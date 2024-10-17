@@ -74,20 +74,6 @@ class _CoinGameScreenState extends State<CoinGameScreen> with SingleTickerProvid
     }
   }
 
-  // Save the bet result to Firebase
-  // Future<void> _saveBetToHistory(String result, int betAmount, bool win, String outcome) async {
-  //   if (userId != null) {
-  //     await firestore.collection('users').doc(userId).collection('history').add({
-  //       'bet': _selectedBet,
-  //       'amount': betAmount,
-  //       'outcome': outcome,
-  //       'result': result,
-  //       'won': win,
-  //       'date': DateTime.now().toIso8601String(),
-  //     });
-  //   }
-  // }
-
   Future<void> _saveBetToHistory(String result, int betAmount, bool win, String outcome) async {
     if (userId != null) {
       try {
