@@ -65,8 +65,7 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
         'won': won,
         'date': FieldValue.serverTimestamp(),
       });
-    }
-    else {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to save bet history. Please try again.')),
       );
@@ -95,12 +94,12 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
     }
   }
 
+  // Updated win amount calculation logic
   double _calculateWinAmount() {
-    int totalMines = 25;
-    double winAmount = _betAmount.toDouble();
-    winAmount += ((winAmount * winAmount * mineCount * (_openedSafeTiles + 1)) /
-        (totalMines * (totalMines - mineCount)));
-    return winAmount;
+    int totalTiles = gridSize * gridSize;
+    double baseWinAmount = _betAmount.toDouble();
+    double multiplier = (_openedSafeTiles + 1) / (totalTiles - mineCount);
+    return baseWinAmount + (baseWinAmount * multiplier * mineCount);
   }
 
   void _revealSquare(int row, int col) {
@@ -209,7 +208,6 @@ class _MinesGameScreenState extends State<MinesGameScreen> {
     _winAmount = _calculateWinAmount();
     _balance += _winAmount.round();
     _updateBalance(_balance);
-
 
     _revealAllMines();
     _saveGameHistory(true);
