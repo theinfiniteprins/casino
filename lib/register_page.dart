@@ -16,18 +16,22 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
   bool _isLoading = false;
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<void> _saveBalance(String userId, int newBalance) async {
+  Future<void> _saveUserDetails(String userId, String name, String mobile, int initialBalance) async {
     try {
       await firestore.collection('users').doc(userId).set({
-        'balance': newBalance,
+        'name': name,
+        'mobile': mobile,
+        'balance': initialBalance,
       });
-      print("Balance of $newBalance saved for user: $userId");
+      print("User details saved for user: $userId");
     } catch (e) {
-      print("Failed to save balance: $e");
+      print("Failed to save user details: $e");
     }
   }
 
@@ -48,8 +52,8 @@ class _RegisterPageState extends State<RegisterPage> {
         String userId = user.uid;
         print('User ID: $userId');
 
-        // Save initial balance
-        await _saveBalance(userId, 500); // Set balance to 500
+        // Save user details in Firebase with name and mobile number
+        await _saveUserDetails(userId, _nameController.text, _mobileController.text, 500);
 
         // Store user ID and password in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
@@ -81,6 +85,18 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                  labelText: 'Name', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _mobileController,
+              decoration: InputDecoration(
+                  labelText: 'Mobile Number', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(

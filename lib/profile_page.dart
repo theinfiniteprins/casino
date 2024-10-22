@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'custom_app_bar.dart';
+import 'edit_profile_page.dart'; // Import the EditProfilePage
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -12,35 +13,57 @@ class _ProfilePageState extends State<ProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _email;
+  String? _name;
+  String? _mobile;
   int _balance = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
-    _fetchBalance();
   }
 
+  // Fetch user profile details including name, email, mobile, and balance
   Future<void> _fetchUserProfile() async {
     final user = _auth.currentUser;
     if (user != null) {
       setState(() {
         _email = user.email;
       });
+
+      final userId = user.uid;
+      try {
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+          setState(() {
+            _name = userData['name'] ?? 'No Name';
+            _mobile = userData['mobile'] ?? 'No Mobile';
+            _balance = userData['balance'] ?? 0;
+          });
+        } else {
+          print('Document does not exist!');
+        }
+      } catch (e) {
+        print('Error fetching user profile: $e');
+      }
     }
   }
 
-  Future<void> _fetchBalance() async {
-    final userId = _auth.currentUser?.uid;
-    if (userId != null) {
-      DocumentSnapshot userDoc =
-      await _firestore.collection('users').doc(userId).get();
-      if (userDoc.exists) {
-        setState(() {
-          _balance = userDoc['balance'] ?? 0;
-        });
-      }
-    }
+  void _navigateToEditProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(
+          name: _name,
+          mobile: _mobile,
+        ),
+      ),
+    ).then((_) {
+      // Refresh the profile page after editing
+      _fetchUserProfile();
+    });
   }
 
   @override
@@ -75,30 +98,89 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Text(
-              _email ?? 'No Email',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Balance: \$$_balance',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'User Information',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoRow('Name:', _name ?? 'No Name'),
+                    _buildInfoRow('Email:', _email ?? 'No Email'),
+                    _buildInfoRow('Mobile:', _mobile ?? 'No Mobile'),
+                    const SizedBox(height: 16),
+                    Divider(),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Balance:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₹$_balance',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _navigateToEditProfile,
+                      child: Text('Edit Profile'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper function to build a row for displaying user information
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
