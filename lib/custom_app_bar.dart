@@ -1,9 +1,12 @@
 import 'package:casino/home_screen.dart';
+import 'package:casino/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'DepositPage.dart';
+import 'WithdrawPage.dart';
 import 'games/bets_screen.dart';
 import 'history_page.dart';
 import 'login_page.dart';
@@ -141,16 +144,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
               if (value != null) {
                 switch (value) {
                   case 'Profile':
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
                     break;
                   case 'History':
                    Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
                     break;
                   case 'Deposit':
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => DepositPage()));
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => DepositPage()));
                     break;
                   case 'Withdraw':
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => WithdrawPage()));
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => WithdrawPage()));
                     break;
                   case 'Sign Out':
                     _signOut(context);
